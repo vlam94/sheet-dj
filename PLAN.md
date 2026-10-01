@@ -304,7 +304,7 @@ Answer each question with evidence, using `tests/fixtures/input/*` and
 - Modules are created in the step that implements them, not as empty files. `hypothesis` joins the
   `dev` extra for Step 2's property test.
 
-### [ ] Step 2 — `model.py` + `notation.py` (pure, no music21)
+### [x] Step 2 — `model.py` + `notation.py` (pure, no music21)
 - `tests/test_notation.py` holds table-driven cases, one parametrised group per writing rule
   (cycle, one-measure, folding, spelling, arrows, groups). Use the lines in
   `tests/fixtures/output/*.csv` as cases, with their measures written as `Note` lists.
@@ -313,6 +313,11 @@ Answer each question with evidence, using `tests/fixtures/input/*` and
   between consecutive notes as the written cycle or line.
 - *Done when:* every writing rule has at least one case, including a tritone (counts as up), a
   move of more than an octave (two arrows), and a respelled double accidental.
+- Learned: folding must skip a block whose measures are all identical, or rule 3's
+  `Bb | Bb | Bb | Bb` would fold into `( Bb | Bb ) x2`; that is the "single repeated measures are
+  never folded" rule applied to blocks. Collapsing repeated pitches and dropping empty measures
+  (rule 1) live in `notation.py`, because they are pure; music21-specific extraction (ties, grace
+  notes, chords) stays in `parsing.py`.
 
 ### [ ] Step 3 — `parsing.py`
 - `parse_score(data, filename)` does, in order:
