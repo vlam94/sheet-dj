@@ -47,6 +47,13 @@ def plain(message: str) -> str:
     return " ".join(message.replace("*", "").split())
 
 
+def set_list_ids(raw_page: str) -> list[str]:
+    """The song ids the page puts in the set list, in order."""
+    section = re.search(r'<ul id="set-list".*?</ul>', raw_page, re.DOTALL)
+    assert section
+    return re.findall(r'data-id="(\w+)"', section.group(0))
+
+
 def song_ids(app: Flask) -> dict[str, str]:
     return {song.title: song.id for song in library_of(app).songs()}
 
@@ -228,8 +235,7 @@ def test_catalogue_entry(case: Case, app: Flask, caplog: pytest.LogCaptureFixtur
     assert all(title in page for title in case.loaded)  # the songs loaded survived
     if case.keeps_set_list:
         raw = response.get_data(as_text=True)
-        for song_id in song_ids(app).values():
-            assert re.search(rf'value="{song_id}"\s+checked', raw)
+        assert set_list_ids(raw) == list(song_ids(app).values())
         assert 'name="name" value="Mine"' in raw
 
 
@@ -255,8 +261,8 @@ class TestUpload:
 
     def test_shows_the_tuba_part_of_each_score(self, client: FlaskClient) -> None:
         page = text_of(client.get("/"))
-        assert "whole_line.musicxml : Tuba part: Tuba" in page
-        assert "Tuba part: Baixo" in page
+        assert "whole_line.musicxml Tuba part: Tuba" in page
+        assert "tuba_by_midi_program.musicxml Tuba part: Baixo" in page
 
     def test_shows_each_songs_tuba_line(self, client: FlaskClient) -> None:
         assert "Bb | A | D↓ | D | F G | A" in text_of(client.get("/"))
@@ -319,3 +325,25 @@ def test_unknown_page_is_not_a_traceback(client: FlaskClient) -> None:
     response = client.get("/nope")
     assert response.status_code == 404
     assert "Traceback" not in response.get_data(as_text=True)
+
+
+class TestOffline:
+    ASSETS = (
+        "vendor/Sortable.min.js",
+        "vendor/Sortable.LICENSE",
+        "vendor/pico.min.css",
+        "vendor/pico.LICENSE.md",
+        "app.js",
+        "app.css",
+    )
+
+    def test_the_page_links_nothing_outside_the_app(self, client: FlaskClient) -> None:
+        links = re.findall(r'(?:src|href|action)="([^"]*)"', client.get("/").get_data(as_text=True))
+        assert links
+        assert all(link.startswith("/") for link in links)
+
+    @pytest.mark.parametrize("asset", ASSETS)
+    def test_vendored_and_own_assets_are_served_with_their_licences(
+        self, client: FlaskClient, asset: str
+    ) -> None:
+        assert client.get(f"/static/{asset}").status_code == 200

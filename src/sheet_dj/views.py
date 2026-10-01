@@ -92,13 +92,16 @@ def _page(*notices: Notice, set_list_ids: list[str] | None = None, name: str = "
     songs = library.songs()
     by_id = {song.id: song for song in songs}
     chosen = [i for i in dict.fromkeys(set_list_ids or []) if i in by_id]
+    default_name = scores[0].summary.name if scores else ""
     return render_template(
         "index.html",
         notices=list(dict.fromkeys(notices)),
         scores=[(s.summary, _warning(s.summary)) for s in scores],
         available=[song for song in songs if song.id not in chosen],
         set_list=[by_id[i] for i in chosen],
-        name=name or (scores[0].summary.name if scores else ""),
+        position={song.id: index for index, song in enumerate(songs)},
+        default_name=default_name,
+        name=name or default_name,
     )
 
 

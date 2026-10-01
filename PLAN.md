@@ -390,7 +390,7 @@ Answer each question with evidence, using `tests/fixtures/input/*` and
     with the two lists. The set list on an upload page comes from `sessionStorage` (Step 6), not
     from the server.
 
-### [ ] Step 6 — UI
+### [x] Step 6 — UI
 - Vendor Sortable (with MultiDrag) and Pico, with their licence files.
 - `static/app.js` implements:
   - selection, the buttons and double-click;
@@ -400,6 +400,19 @@ Answer each question with evidence, using `tests/fixtures/input/*` and
 - Optional `tests/e2e/test_page.py` (Playwright, `-m e2e`): drag a song, Ctrl-select two and move
   them, Shuffle keeps the same set, Random 2 moves exactly two.
 - *Done when:* the manual checklist in Step 7 passes in Firefox and Chromium.
+- Done: `tests/e2e/test_page.py` (16 tests, `pytest -m e2e --browser chromium --browser firefox`)
+  passes in both browsers; the rest of the Step 7 checklist is below.
+- Decisions:
+  - MultiDrag is set up with `multiDragKey: "Control"` (plain click replaces the selection, Ctrl
+    toggles, Shift selects a range, all built in) and `avoidImplicitDeselect: true`, otherwise a
+    click on a button would clear the selection before the button saw it. MultiDrag matches one key
+    name, so ⌘-click on a Mac is not supported; the product runs on Windows.
+  - The page is plain HTML; the set list is the DOM order of `#set-list`, and the hidden `song`
+    inputs are created on submit. `sessionStorage` keeps the order and the typed output name.
+  - After a form post the page replaces its URL with `/`, so reloading is a plain GET instead of a
+    "resubmit the form?" prompt.
+  - Keyboard: Tab to a song, Space selects, Enter moves it across; the buttons cover the rest.
+  - Dropping score files anywhere on the page uploads them.
 
 ### [ ] Step 7 — Manual check on Linux
 Run `python -m sheet_dj.server`, then:

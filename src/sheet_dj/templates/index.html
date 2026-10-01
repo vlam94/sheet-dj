@@ -4,53 +4,87 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Set list</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='vendor/pico.min.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='app.css') }}">
 </head>
 <body>
-  <main>
-    <h1>Set list</h1>
+<main class="container">
+  <h1>Set list</h1>
 
-    {% for notice in notices %}
-      <p class="notice {{ notice.kind.value }}" role="alert">{{ notice.text | italics }}</p>
-    {% endfor %}
+  {% for notice in notices %}
+    <p class="notice {{ notice.kind.value }}" role="alert">{{ notice.text | italics }}</p>
+  {% endfor %}
 
-    <form action="{{ url_for('sheet_dj.add_scores') }}" method="post" enctype="multipart/form-data">
-      <input type="file" name="scores" multiple accept=".musicxml,.xml,.mxl">
+  <section class="scores">
+    <form id="upload" action="{{ url_for('sheet_dj.add_scores') }}" method="post" enctype="multipart/form-data">
+      <input type="file" name="scores" multiple accept=".musicxml,.xml,.mxl" aria-label="Score files">
       <button type="submit">Add scores</button>
     </form>
     <form action="{{ url_for('sheet_dj.clear_scores') }}" method="post">
-      <button type="submit">Clear all</button>
+      <button type="submit" class="secondary outline">Clear all</button>
     </form>
+  </section>
+  <p class="hint">You can also drop score files anywhere on this page.</p>
 
-    <ul>
+  {% if scores %}
+    <ul class="chips">
       {% for score, warning in scores %}
-        <li>
-          <strong>{{ score.file_name }}</strong>:
-          {% if warning %}{{ warning | italics }}
-          {% else %}Tuba part: <em>{{ score.tuba_part_name }}</em>{% endif %}
+        <li class="{{ 'warning' if warning }}">
+          <strong>{{ score.file_name }}</strong>
+          {% if warning %}{{ warning | italics }}{% else %}Tuba part: <em>{{ score.tuba_part_name }}</em>{% endif %}
         </li>
       {% endfor %}
     </ul>
+  {% endif %}
 
-    <form action="{{ url_for('sheet_dj.export') }}" method="post">
-      <h2>Set list</h2>
-      <ol>
-        {% for song in set_list %}
-          <li><label><input type="checkbox" name="song" value="{{ song.id }}" checked>
-            {{ song.title }} <small>{{ song.score_name }}</small>
-            <code>{{ song.tuba_line }}</code></label></li>
-        {% endfor %}
-      </ol>
-      <h2>Songs</h2>
-      <ul>
-        {% for song in available %}
-          <li><label><input type="checkbox" name="song" value="{{ song.id }}">
-            {{ song.title }} <small>{{ song.score_name }}</small>
-            <code>{{ song.tuba_line }}</code></label></li>
-        {% endfor %}
+  <p class="hint">Click a song to select it. Ctrl-click adds to the selection, Shift-click selects a range.
+    Drag the selection, double-click it or press Enter to move it to the other list.</p>
+
+  <section class="planner">
+    <div class="column">
+      <h2>Songs <small id="songs-count"></small></h2>
+      <div class="tools"><button type="button" class="secondary outline" data-select-all="songs">Select all</button></div>
+      <ul id="songs" class="song-list" data-empty="No songs yet. Add scores above." aria-label="Songs">
+        {%- for song in available -%}
+          {% include "_song.html" %}
+        {%- endfor -%}
       </ul>
-      <label>Output name <input type="text" name="name" value="{{ name }}"></label>
-      <button type="submit">Download set list</button>
-    </form>
-  </main>
+    </div>
+
+    <div class="moves">
+      <button type="button" id="add" disabled>Add →</button>
+      <button type="button" id="remove" disabled>← Remove</button>
+      <button type="button" id="up" disabled>Move up</button>
+      <button type="button" id="down" disabled>Move down</button>
+    </div>
+
+    <div class="column">
+      <h2>Set list <small id="set-list-count"></small></h2>
+      <div class="tools">
+        <button type="button" class="secondary outline" data-select-all="set-list">Select all</button>
+        <button type="button" id="shuffle" class="secondary outline">Shuffle</button>
+        <span class="random">
+          <label for="random-count" class="visually-hidden">How many songs</label>
+          <input type="number" id="random-count" min="1" value="3" inputmode="numeric">
+          <button type="button" id="random" class="secondary outline">Random</button>
+        </span>
+      </div>
+      <ul id="set-list" class="song-list" data-empty="Drag songs here, or select some and press Add →." aria-label="Set list">
+        {%- for song in set_list -%}
+          {% include "_song.html" %}
+        {%- endfor -%}
+      </ul>
+    </div>
+  </section>
+
+  <form id="export" action="{{ url_for('sheet_dj.export') }}" method="post" class="export">
+    <label>Output name
+      <input type="text" name="name" value="{{ name }}" data-default="{{ default_name }}" maxlength="100">
+    </label>
+    <button type="submit">Download set list</button>
+  </form>
+</main>
+<script src="{{ url_for('static', filename='vendor/Sortable.min.js') }}"></script>
+<script src="{{ url_for('static', filename='app.js') }}"></script>
 </body>
 </html>
