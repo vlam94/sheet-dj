@@ -30,6 +30,7 @@ class Song:
 class ScoreSummary:
     """What the page needs to know about one loaded score."""
 
+    file_name: str
     name: str
     digest: str
     songs: tuple[Song, ...]

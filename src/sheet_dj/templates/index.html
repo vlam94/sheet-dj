@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Set list</title>
+</head>
+<body>
+  <main>
+    <h1>Set list</h1>
+
+    {% for notice in notices %}
+      <p class="notice {{ notice.kind.value }}" role="alert">{{ notice.text | italics }}</p>
+    {% endfor %}
+
+    <form action="{{ url_for('sheet_dj.add_scores') }}" method="post" enctype="multipart/form-data">
+      <input type="file" name="scores" multiple accept=".musicxml,.xml,.mxl">
+      <button type="submit">Add scores</button>
+    </form>
+    <form action="{{ url_for('sheet_dj.clear_scores') }}" method="post">
+      <button type="submit">Clear all</button>
+    </form>
+
+    <ul>
+      {% for score, warning in scores %}
+        <li>
+          <strong>{{ score.file_name }}</strong>:
+          {% if warning %}{{ warning | italics }}
+          {% else %}Tuba part: <em>{{ score.tuba_part_name }}</em>{% endif %}
+        </li>
+      {% endfor %}
+    </ul>
+
+    <form action="{{ url_for('sheet_dj.export') }}" method="post">
+      <h2>Set list</h2>
+      <ol>
+        {% for song in set_list %}
+          <li><label><input type="checkbox" name="song" value="{{ song.id }}" checked>
+            {{ song.title }} <small>{{ song.score_name }}</small>
+            <code>{{ song.tuba_line }}</code></label></li>
+        {% endfor %}
+      </ol>
+      <h2>Songs</h2>
+      <ul>
+        {% for song in available %}
+          <li><label><input type="checkbox" name="song" value="{{ song.id }}">
+            {{ song.title }} <small>{{ song.score_name }}</small>
+            <code>{{ song.tuba_line }}</code></label></li>
+        {% endfor %}
+      </ul>
+      <label>Output name <input type="text" name="name" value="{{ name }}"></label>
+      <button type="submit">Download set list</button>
+    </form>
+  </main>
+</body>
+</html>

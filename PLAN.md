@@ -229,6 +229,7 @@ these messages verbatim or by a stable fragment; change both together.
 | E09 | the set list names songs that are no longer loaded (the app restarted) | `library.py` | Some songs in your set list are no longer loaded — the app was closed while idle. Add your scores again and rebuild the set list. |
 | E10 | the same file added twice (same content) | `library.py` | *{file}* is already loaded, so it was skipped. |
 | E11 | more scores than the limit | `library.py` | Only {n} scores can be loaded at once. Use *Clear all* and add the ones you need. |
+| E12 | any unexpected failure (a bug, or a score music21 chokes on while exporting) | `views.py` | Something went wrong and the app could not finish. Your songs are still loaded. Try again; if it keeps happening, close the app and open it again. |
 
 Launcher cases (Phase 2) start at **E20**.
 
@@ -366,7 +367,7 @@ Answer each question with evidence, using `tests/fixtures/input/*` and
     allow untyped calls (override in `pyproject.toml`).
   - Output name sanitising also strips leading/trailing dots and spaces.
 
-### [ ] Step 5 — `library.py`, `config.py`, `views.py`, `server.py`, a bare template
+### [x] Step 5 — `library.py`, `config.py`, `views.py`, `server.py`, a bare template
 - Endpoints as above. Logging goes to the platformdirs log file; there is one top-level handler.
 - `tests/test_views.py`:
   - one parametrised test over the catalogue E01–E11 (`id="E0x"`). Each case asserts the message,
@@ -375,6 +376,19 @@ Answer each question with evidence, using `tests/fixtures/input/*` and
   - a test that one bad file in a batch does not block the good ones.
 - *Done when:* `python -m sheet_dj.server` serves the page and a manual upload → export works
   with the plain template.
+- Checked by hand against the running server (curl): five files in one upload (two good, one
+  MuseScore project, one broken, the 16-song real score) gave the right notices; a download with
+  `set:list?` returned `setlist.zip`; a fresh server answered a stale set list with E09 and kept
+  the name.
+- Decisions:
+  - E12 was added to the catalogue for the one top-level handler.
+  - `ScoreSummary` gained `file_name` (as uploaded), used in every message that names a file;
+    `name` (the stem) stays for the default output name.
+  - `Library.build_set_list` assembles under the lock, because assembly reads the shared music21
+    scores. A song id sent twice is exported once.
+  - The plain template lists songs as checkboxes (checked = in the set list); Step 6 replaces them
+    with the two lists. The set list on an upload page comes from `sessionStorage` (Step 6), not
+    from the server.
 
 ### [ ] Step 6 — UI
 - Vendor Sortable (with MultiDrag) and Pico, with their licence files.

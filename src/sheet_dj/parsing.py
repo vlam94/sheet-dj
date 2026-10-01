@@ -132,6 +132,7 @@ def _parse(data: bytes, file: str) -> ParsedScore:
         for span in spans
     )
     summary = ScoreSummary(
+        file_name=file,
         name=name,
         digest=hashlib.sha256(data).hexdigest(),
         songs=songs,
