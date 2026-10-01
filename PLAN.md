@@ -236,7 +236,7 @@ Launcher cases (Phase 2) start at **E20**.
 
 ## Phase 1 — local server on Linux
 
-### [ ] Step 0 — Spike (scratch only; record the results here)
+### [x] Step 0 — Spike (scratch only; record the results here)
 Answer each question with evidence, using `tests/fixtures/input/*` and
 `examples/eletro_farra_trombone.musicxml`:
 
@@ -257,6 +257,39 @@ Answer each question with evidence, using `tests/fixtures/input/*` and
    Sortable and Pico should be vendored?
 
 *Done when:* each question has a short answer here, and D2 is confirmed or reopened.
+
+**Results** (music21 10.5.0, Python 3.12, MuseScore 4.7.4):
+
+1. **Slicing keeps what we need.** `Part.measures(a, b, indicesNotNumbers=True)` keeps repeat
+   barlines, the `RepeatBracket` spanners (when both endings are inside the slice) and ties.
+   Use `indicesNotNumbers=True`: measure numbers can repeat. The end index is **exclusive**
+   (`measures(4, 8, ...)` gives indices 4–7). The context collected from before the slice (key,
+   time, clef, instrument) lands on the **slice Part at offset 0**, not inside its first measure, and
+   the tempo likewise. A song after a gap measure therefore gets the gap's key and tempo (checked:
+   a song after a 5-flat gap measure gets 5 flats and the 132 tempo). Assembly must move those
+   context elements into the first measure itself.
+2. **`expandRepeats()` works on a slice** and on a whole part. `repeats_and_voltas` gives
+   `1 2 3 1 2 4` both ways; on the real score, "I will find" expands to its 16 measures twice,
+   then the gap measure.
+3. **Parsing is fast:** 0.09 s for the 267 KB example. `converter.parseData(bytes)` is enough for
+   `.musicxml` and `.xml`, **not** for `.mxl` (it raises `ConverterException`). `.mxl` goes through
+   a `delete=False` temp file and `converter.parse(path)`, which works. A truncated XML file raises
+   `xml.etree.ElementTree.ParseError`; empty, garbage, PDF and zip bytes raise
+   `ConverterException`. Both are caught in the one `except Exception` in `parsing.py`.
+4. **Assembly works.** A `Score` built from deep-copied slices of two files (spanners re-inserted
+   into the output part, measures renumbered) exports with `GeneralObjectExporter`, keeps the
+   repeat signs and both `<ending>` elements, and re-parses with the same measures and
+   `expandRepeats()` order. MuseScore 4.7.4 opens the file headless
+   (`QT_QPA_PLATFORM=offscreen mscore -o out.mscx out.musicxml`).
+5. **Instruments.** music21 gives the part named "Baixo" with `<midi-program>59</midi-program>` an
+   `instrument.Tuba` (`midiProgram` 58, 0-based); the Trombone part gets `Trombone` (57). So
+   `isinstance(part.getInstrument(returnDefault=False), instrument.Tuba)` covers the MIDI rule;
+   the name regex is the fallback.
+6. **MultiDrag has Shift-click range selection built in** (SortableJS 1.15.7, `shiftKey` in
+   `MultiDrag`); no custom JS is needed. Vendor **SortableJS 1.15.7** (`Sortable.min.js` is the
+   complete build, MIT) and **Pico.css 2.1.1** (`pico.min.css`, MIT).
+
+**D2 is confirmed.**
 
 ### [ ] Step 1 — Scaffold
 - `pyproject.toml`:
