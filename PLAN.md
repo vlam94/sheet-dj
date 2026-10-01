@@ -414,7 +414,7 @@ Answer each question with evidence, using `tests/fixtures/input/*` and
   - Keyboard: Tab to a song, Space selects, Enter moves it across; the buttons cover the rest.
   - Dropping score files anywhere on the page uploads them.
 
-### [ ] Step 7 — Manual check on Linux
+### [x] Step 7 — Manual check on Linux
 Run `python -m sheet_dj.server`, then:
 1. Add all fixtures plus `examples/eletro_farra_trombone.musicxml` in one go:
    - `broken_xml`, `empty_score` and `project_file` show E05, E06 and E02;
@@ -428,6 +428,21 @@ Run `python -m sheet_dj.server`, then:
 5. Open the CSV in LibreOffice: the arrows and flats display correctly, one row per song.
 6. Stop the server, press Download in the stale tab, and check that the page shows E09 after a
    restart.
+
+**Step 7 result (Linux, scripted with a real server process and real Firefox; MuseScore 4.7.4 and
+LibreOffice headless for the files):**
+1. All fixtures plus the example in one upload: `broken_xml` E05, `empty_score` E06, `project_file`
+   E02, the example E07 with 16 songs, every other file loaded.
+2. Range select, Add, Random 3 and Shuffle built a six-song set list; after a reload the set list
+   and the songs were unchanged.
+3. Output name `set:list?` downloaded as `setlist.zip` holding `setlist.musicxml` and
+   `setlist_tuba.csv`.
+4. MuseScore opens the `.musicxml`: songs in order, one rehearsal mark each, tempo and key at each
+   song, repeats in both staves, rests in the Tuba part for songs without one.
+5. LibreOffice reads the CSV (BOM detected): one row per song, arrows and flats intact.
+6. After restarting the server, Download in the stale tab showed E09 and kept the output name.
+- Not done here (needs a person): drag with a real mouse on a real desktop, and the same checks on
+  Windows (Phase 2).
 
 ---
 
