@@ -46,3 +46,8 @@ files = ["src"]
 [[tool.mypy.overrides]]
 module = ["music21", "music21.*"]
 ignore_missing_imports = true
+
+# music21 is only partly annotated: its constructors and some methods count as untyped calls.
+[[tool.mypy.overrides]]
+module = ["sheet_dj.parsing", "sheet_dj.assembly"]
+disallow_untyped_calls = false

@@ -341,7 +341,7 @@ Answer each question with evidence, using `tests/fixtures/input/*` and
     The pure core does not log, so the original exception travels as `__cause__` for the shell to
     log.
 
-### [ ] Step 4 — `assembly.py` + `export.py`
+### [x] Step 4 — `assembly.py` + `export.py`
 - `assemble_set_list` follows D7. `tuba_csv` and `set_list_zip` follow D9–D11.
 - `tests/test_export.py` covers:
   - **every** directory under `fixtures/scenarios/`: load the inputs, order the songs by title,
@@ -351,6 +351,20 @@ Answer each question with evidence, using `tests/fixtures/input/*` and
   - sanitising of the output name.
 - *Done when:* the scenario passes and the exported file opens in MuseScore (checked once by hand;
   note the result here).
+- **MuseScore check (4.7.4, headless, rendered to PNG):** a set list of seven songs from five
+  scores (two instruments, a score without a tuba, voltas, key and tempo changes, a song from the
+  real example) opens with title, one rehearsal mark per song, the right key and tempo at each
+  song, voltas drawn, and rests in the Tuba part where a song has none.
+- Learned:
+  - rests that stand in for a missing part must copy the song's barlines, endings, key and time
+    from the score's first part. With plain rests, MuseScore kept 1 of 4 repeats because the
+    staves disagreed. A test compares the repeat structure of every part.
+  - `music21` writes "Music21" as the composer unless one is set, so an empty composer is given.
+  - `pathvalidate` truncates by bytes in the filesystem encoding and crashed under `LC_ALL=C`;
+    `fs_encoding="utf-8"` is passed explicitly (the `PYTHONUTF8=0 LC_ALL=C` run found it).
+  - mypy: music21 ships type hints but is only partly annotated, so `parsing` and `assembly`
+    allow untyped calls (override in `pyproject.toml`).
+  - Output name sanitising also strips leading/trailing dots and spaces.
 
 ### [ ] Step 5 — `library.py`, `config.py`, `views.py`, `server.py`, a bare template
 - Endpoints as above. Logging goes to the platformdirs log file; there is one top-level handler.
