@@ -1,12 +1,13 @@
 """Create the app and serve it on this machine only."""
 
 import logging
+import webbrowser
 from logging.handlers import RotatingFileHandler
 from pathlib import Path
 
-import waitress
 from flask import Flask
 from platformdirs import user_log_dir
+from waitress.server import create_server
 
 from sheet_dj import views
 from sheet_dj.config import Config
@@ -48,10 +49,13 @@ def configure_logging() -> None:
 
 
 def main() -> None:
-    """Serve in the foreground."""
+    """Serve in the foreground and open the page in the browser."""
     config = Config.from_env()
     configure_logging()
-    waitress.serve(create_app(config), host=HOST, port=config.port)
+    server = create_server(create_app(config), host=HOST, port=config.port)
+    # The socket is already listening, so the browser's first request waits for run() below.
+    webbrowser.open(f"http://{HOST}:{config.port}/")
+    server.run()
 
 
 if __name__ == "__main__":

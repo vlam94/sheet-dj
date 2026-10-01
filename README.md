@@ -39,7 +39,7 @@ python -m venv .venv
 .venv/bin/python -m sheet_dj.server
 ```
 
-Then open <http://127.0.0.1:5118> in a browser. Stop the server with Ctrl+C.
+The page opens in your browser by itself (<http://127.0.0.1:5118>). Stop the server with Ctrl+C.
 
 The `sheet-dj-server` command installed in the venv does the same thing:
 
