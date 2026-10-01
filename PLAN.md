@@ -291,7 +291,7 @@ Answer each question with evidence, using `tests/fixtures/input/*` and
 
 **D2 is confirmed.**
 
-### [ ] Step 1 — Scaffold
+### [x] Step 1 — Scaffold
 - `pyproject.toml`:
   - build backend: hatchling;
   - runtime dependencies: `flask`, `waitress`, `music21`, `pathvalidate`, `platformdirs`;
@@ -301,6 +301,8 @@ Answer each question with evidence, using `tests/fixtures/input/*` and
 - `src/sheet_dj/__init__.py` and empty modules from the module map. Add `tests/` and `.gitignore`.
 - *Done when:* `pip install -e '.[dev]'` works; `pytest` collects (no tests yet); `ruff` and `mypy`
   are clean.
+- Modules are created in the step that implements them, not as empty files. `hypothesis` joins the
+  `dev` extra for Step 2's property test.
 
 ### [ ] Step 2 — `model.py` + `notation.py` (pure, no music21)
 - `tests/test_notation.py` holds table-driven cases, one parametrised group per writing rule
