@@ -319,7 +319,7 @@ Answer each question with evidence, using `tests/fixtures/input/*` and
   (rule 1) live in `notation.py`, because they are pure; music21-specific extraction (ties, grace
   notes, chords) stays in `parsing.py`.
 
-### [ ] Step 3 — `parsing.py`
+### [x] Step 3 — `parsing.py`
 - `parse_score(data, filename)` does, in order:
   1. reject by type: `.mscz` → E02, PDF or image → E03;
   2. parse with music21;
@@ -331,6 +331,15 @@ Answer each question with evidence, using `tests/fixtures/input/*` and
 - `tests/test_parsing.py` is a golden test: every `input/*.musicxml` or `.mscz` matches its
   `output/*.csv` or `output/*.error`. Plus a test that every input has an expected output.
 - *Done when:* every fixture passes.
+- Learned from the real score (`examples/`, 16 songs found, E07 shown):
+  - a rest-only measure that carries a repeat sign or sits in a 1st/2nd ending belongs to its song
+    and is **not** a gap measure ("I will find" ends on one); trimming it would drop the closing
+    repeat. New fixture `rest_closes_repeat` pins this.
+  - a song whose repeats music21 cannot expand (`ExpanderException`) keeps its unexpanded
+    measures instead of rejecting the whole score as damaged.
+  - `UserError` (in `model.py`) is the base of every user-facing failure; `ScoreError` extends it.
+    The pure core does not log, so the original exception travels as `__cause__` for the shell to
+    log.
 
 ### [ ] Step 4 — `assembly.py` + `export.py`
 - `assemble_set_list` follows D7. `tuba_csv` and `set_list_zip` follow D9–D11.

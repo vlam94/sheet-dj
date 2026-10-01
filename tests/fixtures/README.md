@@ -20,6 +20,7 @@ Notes are written as `F2` (step, accidental, octave). `×2` means the measures a
 | `medley_two_songs` | song split: two marks, a gap measure with tempo + key change, the same mark repeated (continuation), a trailing gap | C3 ×3 \| gap \| Bb2 Ab2 \| Eb3 \| (mark again) Bb2 Ab2 \| Eb3 \| gap |
 | `leading_untitled` | notes before the first mark form a song titled from `<work-title>` | Bb2 \| Bb2 \| (mark) F2 G2 \| Ab2 \| F2 G2 \| Ab2 |
 | `no_rehearsal_mark` | no marks: one song titled from `<work-title>`; the old hand-written `C↑` becomes `C` | (F2 \| Ab2 \| C3 \| C3) ×2 |
+| `rest_closes_repeat` | song split: a rest-only measure that carries the closing repeat sign is part of the song, not a gap; the gap after it is trimmed | \|: F2 \| Ab2 \| rest :\| ; gap ; Bb2 \| A2 \| D2 |
 | `tuba_by_midi_program` | tuba detected by `<midi-program>59` on a part named "Baixo" | F2 \| A2 \| D3 \| Bb2 |
 | `no_tuba_part` | Trombone only: an empty tuba line (and warning E07 in the view tests) | none |
 | `broken_xml` | truncated file → E05 | — |

@@ -34,3 +34,12 @@ class ScoreSummary:
     digest: str
     songs: tuple[Song, ...]
     tuba_part_name: str | None
+
+
+class UserError(Exception):
+    """A failure the user can fix: `message` goes on the page, `catalogue_id` is its E-number."""
+
+    def __init__(self, catalogue_id: str, message: str) -> None:
+        super().__init__(message)
+        self.catalogue_id = catalogue_id
+        self.message = message
