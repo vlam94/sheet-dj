@@ -27,20 +27,26 @@ written to disk apart from a log file: loaded scores live in memory until the ap
 
 ## Install it on Windows
 
-Run `sheet-dj-setup-<version>.exe` (no administrator needed). It puts a **Sheet DJ** icon on the
-Desktop and in the Start menu. Click it: the app opens in your browser. Click it again for another
-tab. When you stop using it, it closes itself after 20 minutes; loaded scores are forgotten then.
-To remove it, use *Settings → Apps*. Windows may warn that the installer is from an unknown
-publisher, because it is not signed: choose *More info → Run anyway*.
+1. Download `sheet-dj-setup-<version>.exe` from the **Releases** page of this repository.
+2. Double-click it and follow the steps (no administrator needed; nothing else has to be installed).
+   Windows may warn that the publisher is unknown, because the installer is not signed: click
+   *More info*, then *Run anyway*.
+3. Click the **Sheet DJ** icon on the Desktop (or in the Start menu). The app opens in your browser.
 
-Build the installer (on Windows, Python 3.12 and [Inno Setup 6](https://jrsoftware.org/isinfo.php)):
+Click the icon again for another tab. When you stop using it, the app closes itself after 20
+minutes, and the loaded scores are forgotten. To remove it, use *Settings → Apps*.
+
+### Building the installer (for whoever publishes releases)
+
+Push a version tag (`git tag v0.1.0 && git push --tags`): the *installer* workflow builds the setup
+on GitHub and publishes it as a Release. Without a tag, run the workflow by hand and take the file
+from the run. To build on a Windows machine with Python 3.12 and
+[Inno Setup 6](https://jrsoftware.org/isinfo.php):
 
 ```powershell
 pip install -e ".[build]"
 powershell -File packaging\build.ps1       # writes build\installer\sheet-dj-setup-<version>.exe
 ```
-
-or run the *installer* workflow on GitHub.
 
 ## Run it locally on Linux
 

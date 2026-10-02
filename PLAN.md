@@ -516,6 +516,8 @@ where is stated in each step.
 - *Not verified (no Windows here):* the Inno script has never been compiled and `setup.exe` never
   run, the windowless flags, tkinter in the frozen build, and antivirus behaviour. Step 13 covers
   them; the first run of `installer.yml` is the first compile.
+- A `v*` tag also publishes the setup as a GitHub Release, so the user's whole job is: download the
+  file, double-click it, use the Desktop icon. No terminal, no Python, no other install.
 - Known: the installer is unsigned, so Windows SmartScreen will warn on first run ("More info → Run
   anyway") until a code-signing certificate is added.
 ### [x] Step 12 — CI
