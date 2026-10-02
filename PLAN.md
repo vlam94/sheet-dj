@@ -526,7 +526,25 @@ where is stated in each step.
 - Only the YAML was checked here (it parses, the matrix is as intended). The first push is the
   first real run, and the Windows leg is the first time the suite runs on Windows: expect to fix
   what it finds, as CLAUDE.md says a Windows-only failure blocks the change.
-### [ ] Step 13 — Windows VM checklist
+### [ ] Step 13 — Windows VM checklist (needs a person; not done)
+Get `sheet-dj-setup-<version>.exe` from the *installer* workflow, then on a clean Windows 11 VM
+(`quickemu`: `quickget windows 11`; Wine is not a substitute). Tick each and note surprises here:
+1. [ ] Install: no administrator prompt; a Desktop icon and a Start-menu entry appear, with the
+   note icon.
+2. [ ] Click the icon: no console window flashes, the browser opens the page.
+3. [ ] Load scores (include a `.mscz`), build a set list, download; open the zip, the `.musicxml`
+   and the CSV in Excel (arrows and flats show).
+4. [ ] Click the icon again: a new tab, the same loaded songs, no second process in Task Manager.
+5. [ ] Occupy port 5118 with another program, click the icon: the E20 dialog, not a console.
+6. [ ] Close the tab and leave it 20 minutes (or set `SHEETDJ_IDLE_MINUTES=1`): `sheet-dj.exe` is
+   gone from Task Manager; clicking the icon starts it again.
+7. [ ] Leave the tab open 25 minutes: the app is still running (the heartbeat works).
+8. [ ] Uninstall from *Settings → Apps* while the app is running: it succeeds, and only
+   `%LOCALAPPDATA%\sheet_dj` (the log) is left.
+9. [ ] Reinstall, and install over an existing install: both work.
+10. [ ] Antivirus (Defender) does not quarantine `setup.exe` or `sheet-dj.exe`.
+
+Phase 2 is finished when every box is ticked.
 
 ## Open questions (resolve before the step named)
 
