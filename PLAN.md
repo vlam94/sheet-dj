@@ -476,7 +476,17 @@ where is stated in each step.
 - *Done when:* the tests above pass and `pytest`, `ruff`, `mypy` are clean. Not verifiable on Linux:
   the Windows flags actually hiding the console (Step 13).
 
-### [ ] Step 9 — `idle.py`
+### [x] Step 9 — `idle.py`
+- `IdleWatchdog(timeout, on_idle)`: a daemon thread that calls `on_idle` once, after `timeout`
+  seconds without `touch()`. Every request touches it (`before_request`); an open page sends
+  `POST /heartbeat` every 60 s, so a tab left open keeps the app alive and a closed one lets it go.
+- `server.stop` stops waitress through its own API (`close()`), never a signal. It first marks the
+  open connections `will_close`: a browser keeps a connection open, and without that waitress
+  would serve on for up to two minutes (a test pins it: stops within seconds with a connection open).
+- `SHEETDJ_IDLE_MINUTES` is now a float, so a test can ask for three seconds.
+- `tests/test_idle.py`: the watchdog with a fake clock, heartbeats keeping a real waitress server
+  up, silence stopping it, an open connection not blocking the stop, and a real server subprocess
+  exiting with code 0 when idle.
 ### [ ] Step 10 — Icon
 ### [ ] Step 11 — Installer (PyInstaller + Inno Setup)
 ### [ ] Step 12 — CI

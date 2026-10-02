@@ -126,6 +126,12 @@ def healthz() -> Response:
     return jsonify(app=APP_NAME)
 
 
+@bp.post("/heartbeat")
+def heartbeat() -> tuple[str, int]:
+    """Sent by an open page; being a request, it keeps the idle watchdog quiet."""
+    return "", 204
+
+
 @bp.post("/scores")
 def add_scores() -> str:
     """Add each chosen file independently; one bad file never blocks the others."""

@@ -67,7 +67,7 @@ Set these environment variables before starting the server:
 | variable | default | meaning |
 |---|---|---|
 | `SHEETDJ_PORT` | 5118 | port to listen on |
-| `SHEETDJ_IDLE_MINUTES` | 20 | reserved for Phase 2 (idle shutdown) |
+| `SHEETDJ_IDLE_MINUTES` | 20 | the app stops after this long with no page open |
 | `SHEETDJ_MAX_UPLOAD_MB` | 20 | largest upload accepted at once |
 | `SHEETDJ_MAX_FILES` | 20 | most scores loaded at once |
 

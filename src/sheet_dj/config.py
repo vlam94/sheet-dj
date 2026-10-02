@@ -12,7 +12,7 @@ class Config:
     """The app's settings; the defaults are what users get."""
 
     port: int = 5118
-    idle_minutes: int = 20
+    idle_minutes: float = 20
     max_upload_mb: int = 20
     max_files: int = 20
 
@@ -23,7 +23,7 @@ class Config:
         defaults = cls()
         return cls(
             port=int(source.get("SHEETDJ_PORT", defaults.port)),
-            idle_minutes=int(source.get("SHEETDJ_IDLE_MINUTES", defaults.idle_minutes)),
+            idle_minutes=float(source.get("SHEETDJ_IDLE_MINUTES", defaults.idle_minutes)),
             max_upload_mb=int(source.get("SHEETDJ_MAX_UPLOAD_MB", defaults.max_upload_mb)),
             max_files=int(source.get("SHEETDJ_MAX_FILES", defaults.max_files)),
         )

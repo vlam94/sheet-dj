@@ -2,6 +2,7 @@
   "use strict";
 
   const STORAGE_KEY = "sheet-dj";
+  const HEARTBEAT_MS = 60 * 1000; // an open page keeps the app from shutting down while idle
   const songs = document.getElementById("songs");
   const setList = document.getElementById("set-list");
   const exportForm = document.getElementById("export");
@@ -206,4 +207,7 @@
     uploadForm.querySelector("button").setAttribute("aria-busy", "true");
   });
   setUpFileDrop();
+  setInterval(() => {
+    fetch("/heartbeat", { method: "POST" }).catch(() => {}); // the app may already be gone
+  }, HEARTBEAT_MS);
 })();
