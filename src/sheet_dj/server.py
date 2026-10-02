@@ -1,7 +1,9 @@
 """Create the app and serve it on this machine only."""
 
 import logging
+import sys
 import webbrowser
+from collections.abc import Sequence
 from logging.handlers import RotatingFileHandler
 from pathlib import Path
 
@@ -13,7 +15,10 @@ from sheet_dj import views
 from sheet_dj.config import Config
 from sheet_dj.library import Library
 
+logger = logging.getLogger(__name__)
+
 HOST = "127.0.0.1"  # this machine only: the app has no login
+NO_BROWSER_FLAG = "--no-browser"  # the launcher opens the browser itself
 LOG_FILE_NAME = "server.log"
 LOG_MAX_BYTES = 1_000_000
 LOG_BACKUPS = 2
@@ -42,21 +47,29 @@ def configure_logging() -> None:
             path, maxBytes=LOG_MAX_BYTES, backupCount=LOG_BACKUPS, encoding="utf-8"
         )
     except OSError:
-        logging.getLogger(__name__).warning("Cannot write the log file; logging to the console.")
+        logger.warning("Cannot write the log file; logging to the console.")
         return
     handler.setFormatter(logging.Formatter("%(asctime)s %(levelname)s %(name)s: %(message)s"))
     logging.getLogger().addHandler(handler)
 
 
-def main() -> None:
-    """Serve in the foreground and open the page in the browser."""
+def main(argv: Sequence[str] | None = None) -> int:
+    """Serve in the foreground; open the page in the browser unless `--no-browser` is given."""
+    args = sys.argv[1:] if argv is None else argv
     config = Config.from_env()
     configure_logging()
-    server = create_server(create_app(config), host=HOST, port=config.port)
-    # The socket is already listening, so the browser's first request waits for run() below.
-    webbrowser.open(f"http://{HOST}:{config.port}/")
+    try:
+        server = create_server(create_app(config), host=HOST, port=config.port)
+    except OSError:
+        # Another copy won the port between the launcher's check and now; that copy serves.
+        logger.exception("Cannot listen on %s:%s", HOST, config.port)
+        return 1
+    if NO_BROWSER_FLAG not in args:
+        # The socket is already listening, so the browser's first request waits for run() below.
+        webbrowser.open(f"http://{HOST}:{config.port}/")
     server.run()
+    return 0
 
 
 if __name__ == "__main__":
-    main()
+    sys.exit(main())

@@ -146,7 +146,12 @@ marker and the `e2e` extra.
   **before Step 5**.
 - No i18n library: one language, plain strings.
 
-**D14. The Windows packaging route is left open until Phase 2 starts.** See the options there.
+**D14. Windows packaging: PyInstaller one-folder + Inno Setup** (route B, chosen by the user at the
+start of Phase 2).
+- *Why:* a normal `setup.exe` with an uninstaller, which works offline.
+- *Rejected:* route A, PowerShell + venv (needs the network and Python at install time).
+- *Consequence:* the packaged program is one windowless `sheet-dj.exe`. The server is the same exe
+  run with `--serve` (the launcher spawns `sheet-dj.exe --serve`), so there is a single entry point.
 
 ---
 
@@ -231,7 +236,10 @@ these messages verbatim or by a stable fragment; change both together.
 | E11 | more scores than the limit | `library.py` | Only {n} scores can be loaded at once. Use *Clear all* and add the ones you need. |
 | E12 | any unexpected failure (a bug, or a score music21 chokes on while exporting) | `views.py` | Something went wrong and the app could not finish. Your songs are still loaded. Try again; if it keeps happening, close the app and open it again. |
 
-Launcher cases (Phase 2) start at **E20**.
+| E20 | the port is held by another program (not this app) | `launcher.py` | Sheet DJ could not start because another program is using port {port}. Close that program and click the icon again. |
+| E21 | the server did not answer in time after starting | `launcher.py` | Sheet DJ did not start in time. Click the icon again. If it still does not open, send the file {log} to whoever set this up. |
+
+E20 and E21 are shown in a native dialog, not on the page; their tests are in `test_launcher.py`.
 
 ---
 
@@ -446,45 +454,33 @@ LibreOffice headless for the files):**
 
 ---
 
-## Phase 2 — Windows product (decide at the start of the phase)
+## Phase 2 — Windows product
 
-The work, in order. Each item becomes a step when the phase starts.
+The route is D14 (PyInstaller + Inno Setup). Linux cannot run the installer, so what is verified
+where is stated in each step.
 
-1. **`launcher.py`** (the `[project.gui-scripts] sheet-dj` entry): start the server or attach to a
-   running one.
-   - It probes `127.0.0.1:SHEETDJ_PORT` for a health endpoint (`/healthz`, which returns the app
-     name, so a foreign program on the port is detected).
-   - If nothing answers, it spawns the server detached with no console
-     (`DETACHED_PROCESS | CREATE_NO_WINDOW`), waits for it to be ready, and opens the browser.
-   - Failures show a `tkinter.messagebox` dialog: **E20** port taken by another program, **E21**
-     server did not start in time (with the log location).
-2. **`idle.py`**: a watchdog that stops waitress through its own API after
-   `SHEETDJ_IDLE_MINUTES` with no requests. The page sends a light heartbeat while open, so an
-   open tab keeps the app alive.
-3. **Icon:** `sheet-dj.svg` and `sheet-dj.ico`.
-4. **Installer — choose one, then write the install/uninstall steps here. Both must be safe to
-   re-run.**
-   - *A. PowerShell + venv:* install Python from python.org if missing, create a per-user venv,
-     `pip install` the wheel, and create Desktop and Start-menu shortcuts.
-     - Pros: small, transparent.
-     - Cons: needs network at install time, and music21 pulls in a sizeable dependency tree.
-   - *B. PyInstaller one-folder + Inno Setup:* a real `setup.exe` with uninstall support, working
-     offline.
-     - Pros: the most "normal" for users.
-     - Cons: a big bundle, a Windows build machine or CI job, and false positives from antivirus
-       software.
-5. **CI:** GitHub Actions matrix `ubuntu-latest` × `windows-latest` running pytest, ruff and mypy.
-   Add the `PYTHONUTF8=0 LC_ALL=C` run on Ubuntu.
-6. **VM checklist** (quickemu `quickget windows 11`):
-   1. install;
-   2. click the icon (the browser opens);
-   3. load scores, build a set list, download, open the files;
-   4. click the icon again (a new tab, the same library);
-   5. leave it idle (the process exits);
-   6. uninstall (nothing is left behind except the log directory);
-   7. reinstall.
+### [x] Step 8 — `launcher.py` and `/healthz`
+- `/healthz` answers `{"app": "sheet-dj"}`, so a foreign program on the port is detected.
+- `launcher.py` (`[project.gui-scripts] sheet-dj`):
+  1. `probe(port)` → free / ours / foreign (no system proxy is consulted);
+  2. free: spawn the server detached with no console (`spawn_options`, the only platform branch),
+     wait up to 30 s for `/healthz`, then open the browser;
+  3. ours: just open the browser (a second click gives a new tab, the same library);
+  4. foreign: E20; no answer in time: E21. Both in a `tkinter` dialog, plus the log.
+- `server.main` takes `--no-browser` (the launcher opens the browser itself) and returns 1 with a log
+  line when it loses the race for the port. `launcher --serve` runs the server in-process, which is
+  how the packaged exe starts it.
+- `tests/test_launcher.py`: E20 and E21 in one parametrised test (`-k E20`), the probe against a
+  real waitress app, a foreign server and a silent socket, the attach and start paths, both
+  `spawn_options` branches, and one real spawn of the server as a subprocess.
+- *Done when:* the tests above pass and `pytest`, `ruff`, `mypy` are clean. Not verifiable on Linux:
+  the Windows flags actually hiding the console (Step 13).
 
----
+### [ ] Step 9 — `idle.py`
+### [ ] Step 10 — Icon
+### [ ] Step 11 — Installer (PyInstaller + Inno Setup)
+### [ ] Step 12 — CI
+### [ ] Step 13 — Windows VM checklist
 
 ## Open questions (resolve before the step named)
 

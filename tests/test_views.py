@@ -347,3 +347,9 @@ class TestOffline:
         self, client: FlaskClient, asset: str
     ) -> None:
         assert client.get(f"/static/{asset}").status_code == 200
+
+
+def test_healthz_names_the_app(client: FlaskClient) -> None:
+    response = client.get("/healthz")
+    assert response.status_code == 200
+    assert response.get_json() == {"app": "sheet-dj"}

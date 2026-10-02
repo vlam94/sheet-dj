@@ -10,6 +10,7 @@ from flask import (
     Blueprint,
     Flask,
     current_app,
+    jsonify,
     redirect,
     render_template,
     request,
@@ -20,7 +21,7 @@ from markupsafe import Markup, escape
 from werkzeug.exceptions import HTTPException, RequestEntityTooLarge
 from werkzeug.wrappers import Response
 
-from sheet_dj.config import Config
+from sheet_dj.config import APP_NAME, Config
 from sheet_dj.export import output_name, set_list_zip, tuba_csv
 from sheet_dj.library import Library
 from sheet_dj.model import ScoreSummary, UserError
@@ -117,6 +118,12 @@ def _error(text: str) -> Notice:
 def index() -> str:
     """The page."""
     return _page()
+
+
+@bp.get("/healthz")
+def healthz() -> Response:
+    """Tell the launcher that this port is served by this app."""
+    return jsonify(app=APP_NAME)
 
 
 @bp.post("/scores")

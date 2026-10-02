@@ -4,6 +4,8 @@ import os
 from collections.abc import Mapping
 from dataclasses import dataclass
 
+APP_NAME = "sheet-dj"  # what /healthz answers, so the launcher can tell this app from another
+
 
 @dataclass(frozen=True)
 class Config:

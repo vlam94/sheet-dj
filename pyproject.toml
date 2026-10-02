@@ -22,6 +22,10 @@ e2e = ["pytest-playwright>=0.5"]
 [project.scripts]
 sheet-dj-server = "sheet_dj.server:main"
 
+# Built as a windowless .exe on Windows, so the icon never opens a console.
+[project.gui-scripts]
+sheet-dj = "sheet_dj.launcher:main"
+
 [tool.hatch.build.targets.wheel]
 packages = ["src/sheet_dj"]
 
