@@ -518,7 +518,14 @@ where is stated in each step.
   them; the first run of `installer.yml` is the first compile.
 - Known: the installer is unsigned, so Windows SmartScreen will warn on first run ("More info → Run
   anyway") until a code-signing certificate is added.
-### [ ] Step 12 — CI
+### [x] Step 12 — CI
+- `.github/workflows/ci.yml`: on every push and pull request, a matrix of `ubuntu-latest` and
+  `windows-latest` (Python 3.12, `fail-fast: false`) runs `ruff check`, `ruff format --check`,
+  `mypy` and `pytest`; Ubuntu runs `pytest` a second time with `PYTHONUTF8=0 LC_ALL=C`. The
+  browser tests (`-m e2e`) stay out of CI.
+- Only the YAML was checked here (it parses, the matrix is as intended). The first push is the
+  first real run, and the Windows leg is the first time the suite runs on Windows: expect to fix
+  what it finds, as CLAUDE.md says a Windows-only failure blocks the change.
 ### [ ] Step 13 — Windows VM checklist
 
 ## Open questions (resolve before the step named)
