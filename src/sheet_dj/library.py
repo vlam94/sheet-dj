@@ -55,6 +55,8 @@ class Library:
     def build_set_list(self, song_ids: Sequence[str], title: str) -> tuple[bytes, list[Song]]:
         """Assemble the songs, in the order given, into one score; also return the songs.
 
+        The score takes its page layout from the first score loaded.
+
         Raises `LibraryError` (E09) if any id is no longer loaded. Assembly runs under the lock
         because it reads the shared music21 scores.
         """
@@ -67,4 +69,5 @@ class Library:
             if any(song_id not in by_id for song_id in song_ids):
                 raise LibraryError("E09", E09_SONGS_GONE)
             refs = [by_id[song_id] for song_id in dict.fromkeys(song_ids)]
-            return assemble_set_list(refs, title), [ref.song for ref in refs]
+            layout = self._scores[0].layout_defaults if self._scores else None
+            return assemble_set_list(refs, title, layout), [ref.song for ref in refs]

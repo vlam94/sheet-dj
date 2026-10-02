@@ -2,9 +2,12 @@
 
 import contextlib
 import hashlib
+import io
 import re
 import tempfile
 import uuid
+import xml.etree.ElementTree as ET
+import zipfile
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from pathlib import Path, PureWindowsPath
@@ -67,6 +70,7 @@ class ParsedScore:
     summary: ScoreSummary
     score: stream.Score  # read-only after parsing; only parsing.py and assembly.py look inside
     tuba_index: int | None
+    layout_defaults: str | None  # the file's <defaults> element (page, system and font layout)
 
 
 @dataclass(frozen=True)
@@ -138,7 +142,27 @@ def _parse(data: bytes, file: str) -> ParsedScore:
         songs=songs,
         tuba_part_name=None if tuba is None else _part_label(tuba),
     )
-    return ParsedScore(summary, score, tuba_index)
+    return ParsedScore(summary, score, tuba_index, _layout_defaults(data))
+
+
+def _layout_defaults(data: bytes) -> str | None:
+    """The `<defaults>` element of the score file as text, or None if it has none."""
+    try:
+        element = ET.fromstring(_xml_of(data)).find("defaults")
+    except (ET.ParseError, KeyError, zipfile.BadZipFile):
+        return None
+    return None if element is None else ET.tostring(element, encoding="unicode").strip()
+
+
+def _xml_of(data: bytes) -> bytes:
+    if not data.startswith(ZIP_MAGIC):
+        return data
+    with zipfile.ZipFile(io.BytesIO(data)) as archive:
+        container = ET.fromstring(archive.read("META-INF/container.xml"))
+        root_file = container.find(".//rootfile")
+        if root_file is None:
+            raise KeyError("rootfile")
+        return archive.read(root_file.attrib["full-path"])
 
 
 def _read_score(data: bytes) -> stream.Score:

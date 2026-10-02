@@ -1,6 +1,7 @@
 """Build the set-list score from songs of loaded scores. With `parsing`, the only music21 user."""
 
 import copy
+import re
 from collections import Counter
 from collections.abc import Sequence
 from dataclasses import dataclass
@@ -27,6 +28,8 @@ from sheet_dj.parsing import ParsedScore
 
 TUBA_PART_NAME = "Tuba"
 DEFAULT_BAR_LENGTH = 4.0
+DEFAULTS_ELEMENT = re.compile(r"<defaults\s*/>|<defaults>.*?</defaults>", re.DOTALL)
+FIRST_AFTER_DEFAULTS = re.compile(r"<credit[\s>]|<part-list")
 KEPT_IN_RESTS = (bar.Barline, meter.TimeSignature, key.KeySignature)
 # What a song's first measure must state itself, because the song may follow one in another key.
 CONTEXT_CLASSES = (clef.Clef, meter.TimeSignature, key.KeySignature, tempo.MetronomeMark)
@@ -46,15 +49,31 @@ class SongRef:
     song: Song
 
 
-def assemble_set_list(songs: Sequence[SongRef], title: str) -> bytes:
-    """Return the MusicXML of the songs in order, as one score called `title`."""
+def assemble_set_list(
+    songs: Sequence[SongRef], title: str, layout_defaults: str | None = None
+) -> bytes:
+    """Return the MusicXML of the songs in order, as one score called `title`.
+
+    `layout_defaults` is a `<defaults>` element to give the score, so it is laid out like a source.
+    """
     result = stream.Score()
     # An empty composer stops music21 from printing its own name there.
     result.metadata = metadata.Metadata(title=title, composer="")
     for position, (part_key, name) in enumerate(_output_part_names(songs).items()):
         result.insert(0, _build_part(part_key, name, songs, with_titles=position == 0))
     exported: bytes = GeneralObjectExporter(result).parse()
-    return exported
+    if layout_defaults is None:
+        return exported
+    return _with_defaults(exported.decode("utf-8"), layout_defaults).encode("utf-8")
+
+
+def _with_defaults(musicxml: str, defaults: str) -> str:
+    """Replace the score's `<defaults>`; the schema puts it before the credits and part list."""
+    musicxml = DEFAULTS_ELEMENT.sub("", musicxml)
+    anchor = FIRST_AFTER_DEFAULTS.search(musicxml)
+    if anchor is None:
+        return musicxml
+    return f"{musicxml[: anchor.start()]}{defaults}\n  {musicxml[anchor.start() :]}"
 
 
 def _part_name(part: stream.Part, index: int) -> str:

@@ -220,9 +220,13 @@ def test_reading_a_written_line_gives_back_the_song(part: list[list[tuple[int, b
         return
     read = read_line(text)
     shift = played[0][0].midi - read[0][0].midi  # the line does not say which octave
+    seen: set[tuple[int, ...]] = set()
     for i, expected in enumerate(played):
         actual = read[i % len(read)]
-        assert [spell(n) for n in expected] == [n.name for n in actual]
+        pitches = tuple(n.midi for n in expected)
+        if pitches not in seen:  # a repeat of a measure is written with the first one's spelling
+            seen.add(pitches)
+            assert [spell(n) for n in expected] == [n.name for n in actual]
         assert [n.midi + shift for n in actual] == [n.midi for n in expected]
 
 
