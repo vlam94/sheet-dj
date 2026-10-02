@@ -49,6 +49,26 @@ class SongRef:
     song: Song
 
 
+@dataclass(frozen=True)
+class RestShape:
+    """A song as full-measure rests that keep its barlines, key, time and endings.
+
+    Built once per song and copied for each part that needs it: copying the song's music for
+    every such part, only to throw the notes away, was most of the export's time.
+    """
+
+    piece: Piece
+    lengths: list[float]
+
+    def length_at(self, position: int) -> float:
+        """The bar length at `position`; past the end, that of the last measure."""
+        return (
+            self.lengths[min(position, len(self.lengths) - 1)]
+            if self.lengths
+            else DEFAULT_BAR_LENGTH
+        )
+
+
 def assemble_set_list(
     songs: Sequence[SongRef], title: str, layout_defaults: str | None = None
 ) -> bytes:
@@ -59,8 +79,9 @@ def assemble_set_list(
     result = stream.Score()
     # An empty composer stops music21 from printing its own name there.
     result.metadata = metadata.Metadata(title=title, composer="")
+    shapes: dict[str, RestShape] = {}  # one per song, shared by every part that lacks it
     for position, (part_key, name) in enumerate(_output_part_names(songs).items()):
-        result.insert(0, _build_part(part_key, name, songs, with_titles=position == 0))
+        result.insert(0, _build_part(part_key, name, songs, shapes, with_titles=position == 0))
     exported: bytes = GeneralObjectExporter(result).parse()
     if layout_defaults is None:
         return exported
@@ -106,7 +127,12 @@ def _output_part_names(songs: Sequence[SongRef]) -> dict[PartKey, str]:
 
 
 def _build_part(
-    part_key: PartKey, name: str, songs: Sequence[SongRef], *, with_titles: bool
+    part_key: PartKey,
+    name: str,
+    songs: Sequence[SongRef],
+    shapes: dict[str, RestShape],
+    *,
+    with_titles: bool,
 ) -> stream.Part:
     result = stream.Part()
     result.partName = name
@@ -122,7 +148,7 @@ def _build_part(
         pieces.append(_song_piece(source, ref.song))
     default_clef = _first_clef(pieces)
     for ref, piece in zip(songs, pieces, strict=True):
-        whole = _fill_with_rests(piece, ref, default_clef)
+        whole = _fill_with_rests(piece, ref, default_clef, shapes)
         _retitle(whole, ref.song.title if with_titles else None)
         for spanning in whole.getElementsByClass(spanner.Spanner):
             result.insert(0, spanning)
@@ -171,7 +197,17 @@ def _first_clef(pieces: Sequence[Piece | None]) -> clef.Clef:
     return clef.TrebleClef()
 
 
-def _fill_with_rests(piece: Piece | None, ref: SongRef, default_clef: clef.Clef) -> Piece:
+def _rest_shape(ref: SongRef) -> RestShape:
+    piece = _song_piece(ref.score.score.parts[0], ref.song)
+    lengths = [each.highestTime or DEFAULT_BAR_LENGTH for each in _measures(piece)]
+    for measure, length in zip(_measures(piece), lengths, strict=True):
+        _rests_like(measure, length)
+    return RestShape(piece, lengths)
+
+
+def _fill_with_rests(
+    piece: Piece | None, ref: SongRef, default_clef: clef.Clef, shapes: dict[str, RestShape]
+) -> Piece:
     """Complete a song's piece to the song's length in measures, with full-measure rests.
 
     A part the score lacks gets rests all through; a part shorter than the others, rests at the
@@ -183,15 +219,19 @@ def _fill_with_rests(piece: Piece | None, ref: SongRef, default_clef: clef.Clef)
     have = len(_measures(result))
     if have >= wanted:
         return result
-    shape = _song_piece(ref.score.score.parts[0], ref.song)
-    shaped = _measures(shape)
+    if ref.song.id not in shapes:
+        shapes[ref.song.id] = _rest_shape(ref)
+    shape = shapes[ref.song.id]
+    copied = copy.deepcopy(shape.piece)
+    shaped = _measures(copied)
     for position in range(have, wanted):
-        like = shaped[min(position, len(shaped) - 1)] if shaped else stream.Measure()
-        length = like.highestTime or DEFAULT_BAR_LENGTH
-        result.append(_rests_like(shaped[position] if position < len(shaped) else None, length))
+        if position < len(shaped):
+            result.append(shaped[position])
+        else:
+            result.append(_rests_like(None, shape.length_at(position)))
     if have == 0:
         _measures(result)[0].insert(0, copy.deepcopy(default_clef))
-        for ending in shape.getElementsByClass(spanner.RepeatBracket):
+        for ending in copied.getElementsByClass(spanner.RepeatBracket):
             result.insert(0, ending)
     return result
 

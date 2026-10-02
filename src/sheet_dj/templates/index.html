@@ -81,7 +81,9 @@
     <label>Output name
       <input type="text" name="name" value="{{ name }}" data-default="{{ default_name }}" maxlength="100">
     </label>
+    <input type="hidden" name="download_token">
     <button type="submit">Download set list</button>
+    <p id="export-busy" role="status" hidden>Building your set list. This can take a minute for a big one, so please wait: the download starts by itself.</p>
   </form>
 </main>
 <script src="{{ url_for('static', filename='vendor/Sortable.min.js') }}"></script>

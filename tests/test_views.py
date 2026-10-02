@@ -320,6 +320,23 @@ class TestExport:
             csv_text = archive.read("x_tuba.csv").decode("utf-8-sig")
         assert csv_text.count("I Will Find") == 1
 
+    def test_tells_the_page_when_the_download_is_ready(
+        self, client: FlaskClient, app: Flask
+    ) -> None:
+        ids = self.ids(app, "I Will Find")
+        response = client.post("/export", data={"song": ids, "download_token": "abc-123_X"})
+        assert response.headers["Set-Cookie"].startswith("sheetdj_download=abc-123_X;")
+
+    @pytest.mark.parametrize("token", [None, "", "a b", "x" * 65, "a;b=c"])
+    def test_ignores_a_missing_or_odd_download_token(
+        self, client: FlaskClient, app: Flask, token: str | None
+    ) -> None:
+        data = {"song": self.ids(app, "I Will Find")}
+        if token is not None:
+            data["download_token"] = token
+        response = client.post("/export", data=data)
+        assert "Set-Cookie" not in response.headers
+
 
 def test_unknown_page_is_not_a_traceback(client: FlaskClient) -> None:
     response = client.get("/nope")

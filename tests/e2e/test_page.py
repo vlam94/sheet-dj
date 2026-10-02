@@ -1,8 +1,10 @@
 """Browser tests of the page. Run with `pytest -m e2e` (needs the e2e extra and a browser)."""
 
 import threading
+import time
 from collections.abc import Iterator
 from pathlib import Path
+from typing import Any
 
 import pytest
 import waitress
@@ -165,6 +167,26 @@ def test_download_sends_the_set_list_as_a_zip(page: Page) -> None:
     with page.expect_download() as download:
         page.get_by_role("button", name="Download set list").click()
     assert download.value.suggested_filename == "My Show.zip"
+
+
+def test_download_button_waits_while_the_set_list_is_built(
+    page: Page, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    build = Library.build_set_list
+
+    def slow(self: Library, *args: Any, **kwargs: Any) -> Any:
+        time.sleep(1)
+        return build(self, *args, **kwargs)
+
+    monkeypatch.setattr(Library, "build_set_list", slow)
+    song(page, "Love Parade").dblclick()
+    button = page.get_by_role("button", name="Download set list")
+    with page.expect_download():
+        button.click()
+        expect(button).to_be_disabled()
+        expect(page.locator("#export-busy")).to_be_visible()
+    expect(button).to_be_enabled()
+    expect(page.locator("#export-busy")).to_be_hidden()
 
 
 def test_download_with_an_empty_set_list_says_why(page: Page) -> None:

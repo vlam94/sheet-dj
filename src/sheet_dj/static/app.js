@@ -3,6 +3,9 @@
 
   const STORAGE_KEY = "sheet-dj";
   const HEARTBEAT_MS = 60 * 1000; // an open page keeps the app from shutting down while idle
+  const DOWNLOAD_COOKIE = "sheetdj_download"; // set by the server when the zip is ready
+  const DOWNLOAD_POLL_MS = 300;
+  const DOWNLOAD_GIVE_UP_MS = 10 * 60 * 1000; // never leave the button off for good
   const songs = document.getElementById("songs");
   const setList = document.getElementById("set-list");
   const exportForm = document.getElementById("export");
@@ -143,6 +146,37 @@
     }
   }
 
+  // Building a big set list takes a while and the page stays put while the browser downloads, so
+  // the button is switched off until the server's cookie says the file is on its way.
+  function waitForDownload() {
+    const token = Math.random().toString(36).slice(2) + Date.now().toString(36);
+    exportForm.elements.download_token.value = token;
+    const button = exportForm.querySelector('button[type="submit"]');
+    const message = document.getElementById("export-busy");
+    button.disabled = true;
+    button.setAttribute("aria-busy", "true");
+    message.hidden = false;
+    const started = Date.now();
+    const timer = setInterval(() => {
+      const ready = document.cookie.split("; ").includes(`${DOWNLOAD_COOKIE}=${token}`);
+      if (!ready && Date.now() - started < DOWNLOAD_GIVE_UP_MS) return;
+      clearInterval(timer);
+      document.cookie = `${DOWNLOAD_COOKIE}=; max-age=0; path=/`;
+      button.disabled = false;
+      button.removeAttribute("aria-busy");
+      message.hidden = true;
+    }, DOWNLOAD_POLL_MS);
+  }
+
+  function onExport(event) {
+    if (exportForm.querySelector('button[type="submit"]').disabled) {
+      event.preventDefault(); // Enter in the name box while a download is being built
+      return;
+    }
+    fillExportForm();
+    waitForDownload();
+  }
+
   function setUpFileDrop() {
     const hasFiles = (event) => Array.from(event.dataTransfer.types || []).includes("Files");
     document.addEventListener("dragover", (event) => {
@@ -202,7 +236,7 @@
   }
 
   nameInput.addEventListener("input", writeStorage);
-  exportForm.addEventListener("submit", fillExportForm);
+  exportForm.addEventListener("submit", onExport);
   uploadForm.addEventListener("submit", () => {
     uploadForm.querySelector("button").setAttribute("aria-busy", "true");
   });

@@ -43,6 +43,8 @@ E12_UNEXPECTED = (
     "Try again; if it keeps happening, close the app and open it again."
 )
 ADDED = "Added *{file}*: {count}."
+DOWNLOAD_COOKIE = "sheetdj_download"  # tells the page its download has started: see app.js
+DOWNLOAD_TOKEN = re.compile(r"[A-Za-z0-9_-]{1,64}")
 ITALICS = re.compile(r"\*(.+?)\*")
 
 
@@ -180,12 +182,16 @@ def export() -> Response | str:
     except UserError as exc:
         return _page(_error(exc.message), set_list_ids=song_ids, name=requested)
     data = set_list_zip(name, musicxml, tuba_csv(songs))
-    return send_file(
+    response = send_file(
         io.BytesIO(data),
         mimetype="application/zip",
         as_attachment=True,
         download_name=f"{name}.zip",
     )
+    token = request.form.get("download_token", "")
+    if DOWNLOAD_TOKEN.fullmatch(token):
+        response.set_cookie(DOWNLOAD_COOKIE, token, max_age=60, samesite="Strict")
+    return response
 
 
 def too_large(_: RequestEntityTooLarge) -> str:

@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "sheet-dj"
-version = "0.1.0"
+version = "0.1.1"
 description = "Build a set list from band scores and export one score plus the tuba lines."
 requires-python = ">=3.12"
 dependencies = [
