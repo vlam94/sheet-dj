@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <title>Sheet DJ</title>
+  <rect width="256" height="256" rx="48" fill="#1d4e89"/>
+  <g fill="#ffffff">
+    <ellipse cx="88" cy="184" rx="30" ry="22" transform="rotate(-22 88 184)"/>
+    <ellipse cx="170" cy="160" rx="30" ry="22" transform="rotate(-22 170 160)"/>
+    <rect x="102" y="64" width="14" height="124"/>
+    <rect x="184" y="40" width="14" height="124"/>
+    <polygon points="102,64 198,40 198,78 102,102"/>
+  </g>
+</svg>

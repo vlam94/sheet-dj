@@ -487,7 +487,14 @@ where is stated in each step.
 - `tests/test_idle.py`: the watchdog with a fake clock, heartbeats keeping a real waitress server
   up, silence stopping it, an open connection not blocking the stop, and a real server subprocess
   exiting with code 0 when idle.
-### [ ] Step 10 — Icon
+### [x] Step 10 — Icon
+- `packaging/sheet-dj.svg` (two beamed eighth notes on a blue rounded square, readable at 16 px)
+  and `packaging/sheet-dj.ico` with 16, 24, 32, 48, 64, 128 and 256 px. `packaging/make_icon.py`
+  renders the `.ico` from the `.svg` (needs `rsvg-convert` and Pillow, run by hand; the result is
+  committed so the Windows build needs neither).
+- `tests/test_packaging.py` checks the svg parses and the ico holds every size.
+- Looked at the 256 px and the 16 px renders by eye; how it looks on a real Windows desktop is part
+  of Step 13.
 ### [ ] Step 11 — Installer (PyInstaller + Inno Setup)
 ### [ ] Step 12 — CI
 ### [ ] Step 13 — Windows VM checklist
