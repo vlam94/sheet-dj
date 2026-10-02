@@ -495,7 +495,29 @@ where is stated in each step.
 - `tests/test_packaging.py` checks the svg parses and the ico holds every size.
 - Looked at the 256 px and the 16 px renders by eye; how it looks on a real Windows desktop is part
   of Step 13.
-### [ ] Step 11 — Installer (PyInstaller + Inno Setup)
+### [x] Step 11 — Installer (PyInstaller + Inno Setup)
+- `packaging/sheet-dj.spec`: PyInstaller one-folder build of `packaging/entry.py` into a windowless
+  `sheet-dj.exe`, with music21's submodules and data files and the app's templates and static files.
+- `packaging/sheet-dj.iss`: a per-user installer (no administrator): the folder into
+  `%LOCALAPPDATA%\Programs\Sheet DJ`, a Desktop and a Start-menu icon, an uninstaller, an
+  "Open Sheet DJ now" checkbox at the end. A fixed `AppId` makes a second run upgrade in place, so
+  re-running is safe. Before installing or uninstalling it stops a running `sheet-dj.exe` with
+  `taskkill`, because the server outlives the browser tab and Windows will not replace the files of
+  a running program. Uninstalling removes only what was installed: the log folder stays.
+- `packaging/build.ps1` (pyinstaller, then the smoke test, then `iscc`) and the manual workflow
+  `.github/workflows/installer.yml` (also on a `v*` tag) build `sheet-dj-setup-<version>.exe` on
+  `windows-latest` and upload it.
+- `packaging/smoke_test.py <program>`: runs the built program with `--serve`, loads a fixture
+  score, builds a set list and downloads the zip. Standard library only.
+- *Verified on Linux:* the PyInstaller build of this spec runs the smoke test; the built program,
+  started with no arguments, spawns its own `--serve` process, which answers `/healthz` and exits on
+  its own after the idle time. The build is 275 MB on disk (music21 and matplotlib); the setup
+  compresses it.
+- *Not verified (no Windows here):* the Inno script has never been compiled and `setup.exe` never
+  run, the windowless flags, tkinter in the frozen build, and antivirus behaviour. Step 13 covers
+  them; the first run of `installer.yml` is the first compile.
+- Known: the installer is unsigned, so Windows SmartScreen will warn on first run ("More info → Run
+  anyway") until a code-signing certificate is added.
 ### [ ] Step 12 — CI
 ### [ ] Step 13 — Windows VM checklist
 

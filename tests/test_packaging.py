@@ -18,3 +18,12 @@ def test_icon_ico_holds_every_size_windows_asks_for() -> None:
     # In the directory a width of 0 means 256.
     widths = {data[6 + 16 * i] or 256 for i in range(count)}
     assert widths == ICON_SIZES
+
+
+def test_installer_inputs_exist() -> None:
+    # What the spec and the Inno script name must be in the repository, or the Windows build breaks.
+    for name in ("entry.py", "sheet-dj.spec", "sheet-dj.iss", "build.ps1", "smoke_test.py"):
+        assert (PACKAGING / name).is_file(), name
+    script = (PACKAGING / "sheet-dj.iss").read_text(encoding="utf-8")
+    assert "SetupIconFile=sheet-dj.ico" in script
+    assert "AppId={{" in script  # the id that lets a new setup upgrade an old install

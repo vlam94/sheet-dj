@@ -1,0 +1,30 @@
+name: installer
+
+# Builds the Windows installer. Run it by hand, or push a version tag such as v0.1.0.
+on:
+  workflow_dispatch:
+  push:
+    tags: ["v*"]
+
+jobs:
+  windows-installer:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: python -m pip install -e ".[build]"
+      - name: Install Inno Setup when the image does not have it
+        shell: pwsh
+        run: |
+          $installed = (Get-Command iscc -ErrorAction SilentlyContinue) -or (Test-Path "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe")
+          if (-not $installed) { choco install innosetup -y --no-progress }
+      - name: Build (PyInstaller, smoke test of the built program, Inno Setup)
+        shell: pwsh
+        run: ./packaging/build.ps1
+      - uses: actions/upload-artifact@v4
+        with:
+          name: sheet-dj-setup
+          path: build/installer/sheet-dj-setup-*.exe
+          if-no-files-found: error

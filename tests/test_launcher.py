@@ -1,5 +1,6 @@
 import json
 import socket
+import sys
 import threading
 import time
 from collections.abc import Callable
@@ -223,3 +224,11 @@ def test_spawned_server_answers_and_stops_when_terminated(
     while launcher.probe(port) is not PortState.FREE and time.monotonic() < deadline:
         time.sleep(0.1)
     assert launcher.probe(port) is PortState.FREE
+
+
+def test_a_windowless_program_gets_standard_streams(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setattr("sys.stdout", None)
+    monkeypatch.setattr("sys.stderr", None)
+    launcher.ensure_standard_streams()
+    print("must not fail", file=sys.stderr)
+    assert sys.stdout is not None

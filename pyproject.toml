@@ -17,6 +17,7 @@ dependencies = [
 
 [project.optional-dependencies]
 dev = ["pytest>=8", "hypothesis>=6", "ruff>=0.5", "mypy>=1.10", "types-waitress", "pillow>=10"]
+build = ["pyinstaller>=6"]
 e2e = ["pytest-playwright>=0.5"]
 
 [project.scripts]

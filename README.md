@@ -13,7 +13,7 @@ The app runs on your own machine and binds to `127.0.0.1` only. It has no login,
 written to disk apart from a log file: loaded scores live in memory until the app stops.
 
 > **Status:** Phase 1 (the app, running on Linux) is done. Phase 2 (Windows launcher, idle shutdown,
-> installer) is not started. See [`PLAN.md`](PLAN.md).
+> installer) is written but not yet tried on a real Windows machine. See [`PLAN.md`](PLAN.md).
 
 ## How it works
 
@@ -24,6 +24,23 @@ written to disk apart from a log file: loaded scores live in memory until the ap
   The rules are in [`CLAUDE.md`](CLAUDE.md), and `tests/test_notation.py` pins each one.
 - Files accepted: `.musicxml`, `.xml`, `.mxl`. MuseScore project files (`.mscz`), PDFs and images
   get a message that says how to export MusicXML instead.
+
+## Install it on Windows
+
+Run `sheet-dj-setup-<version>.exe` (no administrator needed). It puts a **Sheet DJ** icon on the
+Desktop and in the Start menu. Click it: the app opens in your browser. Click it again for another
+tab. When you stop using it, it closes itself after 20 minutes; loaded scores are forgotten then.
+To remove it, use *Settings → Apps*. Windows may warn that the installer is from an unknown
+publisher, because it is not signed: choose *More info → Run anyway*.
+
+Build the installer (on Windows, Python 3.12 and [Inno Setup 6](https://jrsoftware.org/isinfo.php)):
+
+```powershell
+pip install -e ".[build]"
+powershell -File packaging\build.ps1       # writes build\installer\sheet-dj-setup-<version>.exe
+```
+
+or run the *installer* workflow on GitHub.
 
 ## Run it locally on Linux
 
@@ -41,10 +58,12 @@ python -m venv .venv
 
 The page opens in your browser by itself (<http://127.0.0.1:5118>). Stop the server with Ctrl+C.
 
-The `sheet-dj-server` command installed in the venv does the same thing:
+The `sheet-dj-server` command installed in the venv does the same thing, and `sheet-dj` is what the
+Windows icon runs (it starts the server in the background if needed, then opens the browser):
 
 ```sh
 .venv/bin/sheet-dj-server
+.venv/bin/sheet-dj
 ```
 
 ### Using it
@@ -75,7 +94,8 @@ Set these environment variables before starting the server:
 SHEETDJ_PORT=6000 .venv/bin/python -m sheet_dj.server
 ```
 
-The server log is at `~/.local/state/sheet_dj/log/server.log`.
+The server log is at `~/.local/state/sheet_dj/log/server.log` (on Windows,
+`%LOCALAPPDATA%\sheet_dj\Logs\server.log`).
 
 ## Development
 
@@ -102,7 +122,9 @@ src/sheet_dj/
   model.py  notation.py  export.py        pure core (no Flask, no music21 in notation/export)
   parsing.py  assembly.py                 the only modules that import music21
   library.py  views.py  server.py  config.py   shell: state, HTTP, process
+  launcher.py  idle.py                    shell: the icon's entry point, idle shutdown
   templates/  static/                     the page; SortableJS and Pico.css are vendored
+packaging/                                icon, PyInstaller spec, Inno Setup script, build and smoke test
 tests/
   fixtures/                               hand-written scores and expected outputs
   e2e/                                    browser tests
@@ -110,7 +132,7 @@ tests/
 
 - [`CLAUDE.md`](CLAUDE.md): the vocabulary, the tuba-line rules, the architecture and the testing
   rules.
-- [`PLAN.md`](PLAN.md): the design decisions, the error catalogue (E01–E12) and the steps.
+- [`PLAN.md`](PLAN.md): the design decisions, the error catalogue (E01–E12, E20–E21) and the steps.
 - [`examples/`](examples): a real score for manual smoke tests (tests never read from it).
 
 ## Licences

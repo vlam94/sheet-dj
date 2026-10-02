@@ -3,6 +3,7 @@
 import http.client
 import json
 import logging
+import os
 import subprocess
 import sys
 import time
@@ -155,8 +156,16 @@ def launch(
     return 0
 
 
+def ensure_standard_streams() -> None:
+    """Give a windowless program something to print to: Windows leaves it no stdout or stderr."""
+    for name in ("stdout", "stderr"):
+        if getattr(sys, name) is None:
+            setattr(sys, name, open(os.devnull, "w", encoding="utf-8"))  # noqa: SIM115
+
+
 def main(argv: Sequence[str] | None = None) -> int:
     """Entry point of the icon (`sheet-dj`); with `--serve`, the server itself."""
+    ensure_standard_streams()
     args = sys.argv[1:] if argv is None else argv
     if SERVE_FLAG in args:
         return server.main([server.NO_BROWSER_FLAG])
